@@ -85,6 +85,15 @@ const cachedGameData = {
 // ─── Processing ──────────────────────────────────────────────────────────────
 
 async function processCharacterTick(character: Character): Promise<void> {
+    const redis = getRedis();
+    const lockKey = `lock:tick:${character.id}`;
+    // Try to acquire lock for 30 seconds
+    const acquired = await redis.set(lockKey, 'locked', 'PX', 30000, 'NX');
+    if (!acquired) {
+        logWorker(`[Worker] Character ${character.id} is currently locked by another tick process. Skipping.`);
+        return;
+    }
+
 	try {
         const now = Date.now();
         const lastTickAt = character.lastProcessedAt || character.createdAt || now;
@@ -161,7 +170,9 @@ async function processCharacterTick(character: Character): Promise<void> {
 	} catch (error: any) {
 		logWorker(`ERROR in processCharacterTick for ${character.id}: ${error.stack}`);
 		await scheduleCharacterTick(character.id, ONLINE_TICK_MAX);
-	}
+	} finally {
+        await redis.del(lockKey);
+    }
 }
 
 export async function scheduleCharacterTick(characterId: string, delay?: number, status?: string): Promise<void> {
@@ -174,6 +185,7 @@ export async function scheduleCharacterTick(characterId: string, delay?: number,
 		'tick',
 		{ characterId, scheduledAt: Date.now() },
 		{
+            jobId: `tick:${characterId}`,
 			delay: tickDelay,
 			removeOnComplete: true,
 			removeOnFail: { count: 5 }
@@ -210,7 +222,13 @@ async function runWatchdog() {
     }
 }
 
+let isWorkerStarted = false;
 export async function startGameWorker(): Promise<void> {
+    if (isWorkerStarted || (globalThis as any)[GLOBAL_WORKER_KEY]) {
+        logWorker('startGameWorker already running, skipping HMR init...');
+        return;
+    }
+    isWorkerStarted = true;
     logWorker('startGameWorker STARTING...');
     
     // Cleanup items on globalThis if HMR
@@ -230,6 +248,20 @@ export async function startGameWorker(): Promise<void> {
 	const connection = getRedis();
 	const queue = new Queue(QUEUE_NAME, { connection });
     (globalThis as any)[GLOBAL_QUEUE_KEY] = queue;
+
+    // In dev mode, clean up old jobs to prevent tick storms
+    if (process.env.NODE_ENV !== 'production') {
+        try {
+            await queue.drain(true);
+            const delayed = await queue.getDelayed();
+            for (const job of delayed) {
+                await job.remove();
+            }
+            logWorker('[Worker] Cleared old dev queue jobs');
+        } catch (e) {
+            logWorker('[Worker] Error clearing queue: ' + e);
+        }
+    }
 
 	const worker = new Worker(
 		QUEUE_NAME,
