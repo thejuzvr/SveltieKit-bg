@@ -185,7 +185,7 @@ export async function scheduleCharacterTick(characterId: string, delay?: number,
 		'tick',
 		{ characterId, scheduledAt: Date.now() },
 		{
-            jobId: `tick:${characterId}`,
+
 			delay: tickDelay,
 			removeOnComplete: true,
 			removeOnFail: { count: 5 }
