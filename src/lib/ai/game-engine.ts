@@ -1616,13 +1616,14 @@ export async function processGameTick(
         if (actionResult.logs.length > 0) {
             updatedChar = actionResult.char;
             adventureLog.push(...actionResult.logs);
-            shouldTakeTurn = !updatedChar.currentAction;
             if (actionResult.chronicles.length > 0) chronicleEntries.push(...actionResult.chronicles);
         }
+        // If an action is still ongoing, do not take a new turn
+        shouldTakeTurn = !updatedChar.currentAction;
     }
     
     // --- 8. TRAVEL EVENTS & FATIGUE ---
-    if (shouldTakeTurn && updatedChar.currentAction?.type === 'travel') {
+    if (updatedChar.currentAction?.type === 'travel') {
         const travelEventResult = processTravelEvents(updatedChar, gameData);
         updatedChar = travelEventResult.char;
         adventureLog.push(...travelEventResult.logs);
