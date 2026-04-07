@@ -18,6 +18,5 @@ export interface CombatAnalyticsData {
 
 export const saveCombatAnalytics = async (data: CombatAnalyticsData) => {
     // Implementation placeholder - in a real app, this would save to a database or analytics provider
-    console.log(`[Combat Analytics] Saved combat for character ${data.characterId} against ${data.enemyName}`);
     return { success: true };
 };
