@@ -23,8 +23,8 @@ import { initialNpcs } from '$lib/data/npcs.js';
 const QUEUE_NAME = 'game-tick-v4';
 const ONLINE_TICK_MIN = 20_000;
 const ONLINE_TICK_MAX = 120_000;
-const COMBAT_TICK_MIN = 5_000;
-const COMBAT_TICK_MAX = 15_000;
+const COMBAT_TICK_MIN = 2_000;
+const COMBAT_TICK_MAX = 4_500;
 const OFFLINE_TICK_MIN = 10 * 60_000; 
 const OFFLINE_TICK_MAX = 60 * 60_000; 
 

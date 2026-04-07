@@ -33,7 +33,7 @@
 		<!-- Hero Side -->
 		<div class="combatant hero">
 			<div class="portrait-box">
-				<div class="portrait-placeholder hero-bg"></div>
+				<img src="/images/avatars/hero.png" alt="Hero" class="portrait-image hero-bg" />
 				<div class="name-plate">{heroName}</div>
 			</div>
 
@@ -74,7 +74,7 @@
 		<!-- Enemy Side -->
 		<div class="combatant enemy">
 			<div class="portrait-box">
-				<div class="portrait-placeholder enemy-bg"></div>
+				<img src="/images/avatars/monster.png" alt="Enemy" class="portrait-image enemy-bg" />
 				<div class="name-plate">{combatState.enemy.name}</div>
 			</div>
 
@@ -147,17 +147,16 @@
 		overflow: hidden;
 	}
 
-	.portrait-placeholder {
+	.portrait-image {
 		width: 100%;
 		height: 100%;
-		background-size: cover;
-		background-position: center;
-		opacity: 0.6;
-		mix-blend-mode: luminosity;
+		object-fit: cover;
+		opacity: 0.9;
+		mix-blend-mode: normal;
 	}
 
-	.hero-bg { background-image: radial-gradient(circle, #2a4365, #1a202c); }
-	.enemy-bg { background-image: radial-gradient(circle, #742a2a, #1a202c); }
+	.hero-bg { background-image: radial-gradient(circle, #2a4365, #1a202c); border: 2px solid #3b82f6; }
+	.enemy-bg { background-image: radial-gradient(circle, #742a2a, #1a202c); border: 2px solid #ef4444; }
 
 	.name-plate {
 		position: absolute;

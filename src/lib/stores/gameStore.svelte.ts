@@ -1,4 +1,5 @@
 import { browser } from '$app/environment';
+import { untrack } from 'svelte';
 import type { Character } from '$lib/types/character';
 
 export class GameStore {
@@ -8,6 +9,7 @@ export class GameStore {
     lastTickAt = $state<number>(Date.now());
     now = $state(Date.now());
     ws: WebSocket | null = null;
+    private refreshInterval: any = null;
     lastCombatLogTime = 0;
     unreadCombat = $state(false);
 
@@ -20,12 +22,20 @@ export class GameStore {
     }
 
     init(initialCharacter: Character, initialEvents: any[]) {
+        const isSameCharacter = untrack(() => this.character?.id === initialCharacter.id);
+        
         this.character = initialCharacter;
         this.events = initialEvents;
+
         if (browser) {
-            this.connectWebSocket();
-            // Polling fallback every 30s
-            setInterval(() => this.refresh(), 30000);
+            // Only reconnect if the character has changed or if no socket exists
+            if (!isSameCharacter || !this.ws || this.ws.readyState === WebSocket.CLOSED) {
+                this.connectWebSocket();
+            }
+
+            // Always clear the old interval and start a new one to avoid leaks
+            if (this.refreshInterval) clearInterval(this.refreshInterval);
+            this.refreshInterval = setInterval(() => this.refresh(), 30000);
         }
     }
 
@@ -48,7 +58,7 @@ export class GameStore {
 
     async fetchEvents() {
         try {
-            const res = await fetch('/api/character/events?limit=150');
+            const res = await fetch('/api/character/events?limit=60');
             if (res.ok) {
                 const json = await res.json();
                 if (Array.isArray(json.events)) {

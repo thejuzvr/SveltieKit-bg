@@ -13,6 +13,12 @@
 	const unreadCombat = $derived(gameStore.unreadCombat);
 	
 	let logLimit = $state<number>(40);
+	const journalEvents = $derived(
+		events
+			.filter(e => e.type !== 'combat' && !e.message.toLowerCase().includes('настроение') && !e.message.toLowerCase().includes('удручён') && !e.message.toLowerCase().includes('страдает'))
+			.slice(0, logLimit)
+	);
+	
 	let sendingMessage = $state(false);
 	let divineMessage = $state('');
 	let activeTab = $state<'journal' | 'combat'>('journal');
@@ -262,6 +268,15 @@
 
 		<!-- COL 2+3: CENTRAL (ACTION + JOURNAL + COMBAT LOG) -->
 		<div class="col col-main">
+			<!-- NEW: Top Widgets Row -->
+			<div class="top-widgets">
+				<GameTimeClock
+					timeOfDay={character.timeOfDay}
+					weather={character.weather}
+					season={character.season}
+					gameDate={character.gameDate}
+				/>
+			</div>
 
 			{#if character.currentAction}
 				<div class="card action-card">
@@ -278,21 +293,12 @@
 			{/if}
 
 			{#if isInCombat && character.combat}
-				<div class="card combat-card" style="display: none;">
-					<div class="card-content">
-						<p class="combat-title blinking">⚔ БОЕВОЕ СТОЛКНОВЕНИЕ ⚔</p>
-						<div class="combat-arena">
-							<div class="combatant">
-								<div class="combatant-name font-cinzel">{character.name}</div>
-								<div class="combatant-hp hero-hp">❤️ {character.stats.health.current}</div>
-							</div>
-							<div class="vs-divider">VS</div>
-							<div class="combatant">
-								<div class="combatant-name font-cinzel">{character.combat.enemy.name}</div>
-								<div class="combatant-hp enemy-hp">☠️ {character.combat.enemy.health.current}</div>
-							</div>
-						</div>
-					</div>
+				<div style="margin-bottom: 0.5rem;">
+					<CombatArena
+						combatState={character.combat}
+						heroName={character.name}
+						heroStats={character.stats}
+					/>
 				</div>
 			{/if}
 
@@ -300,15 +306,7 @@
 			<div class="card journal-card">
 				<div class="card-header-row tabs-header">
 					<div class="tabs-nav">
-						<button class="tab-btn font-cinzel" class:active={activeTab === 'journal'} onclick={() => activeTab = 'journal'}>📜 Журнал</button>
-						<button class="tab-btn font-cinzel" class:active={activeTab === 'combat'} 
-							onclick={() => { 
-								activeTab = 'combat'; 
-								gameStore.markCombatRead(); 
-							}}>
-							⚔️ Бой
-							{#if unreadCombat} <span class="tab-badge">!</span> {/if}
-						</button>
+						<button class="tab-btn font-cinzel active" disabled>📜 Журнал приключений</button>
 					</div>
 					<div class="limit-selector">
 						<span class="limit-label">{events.filter(e => activeTab === 'combat' ? e.type === 'combat' : (e.type !== 'combat' && !e.message.includes('настроение'))).length} зап.</span>
@@ -319,63 +317,43 @@
 				</div>
 				
 				<div class="card-content event-feed">
-					{#if activeTab === 'journal'}
-						{@const journalEvents = events.filter(e => e.type !== 'combat' && !e.message.toLowerCase().includes('настроение') && !e.message.toLowerCase().includes('удручён') && !e.message.toLowerCase().includes('страдает')).slice(0, logLimit)}
-						{#if journalEvents.length === 0}
-							<div class="empty-feed">
-								<p>🌿 Герой только начинает свой путь...</p>
-								<p class="muted-text">Первые записи скоро появятся здесь.</p>
-							</div>
-						{:else}
-							{#each journalEvents as ev, i}
-								{@const isWeather = ev.message.includes('Погода') || ev.message.includes('погода')}
-								{@const isTravel = ev.message.includes('прибыл') || ev.message.includes('направил') || ev.message.includes('путь') || ev.message.includes('Солитьюд') || ev.message.includes('Вайтран')}
-								{@const isLevel = ev.message.includes('уровень') || ev.message.includes('Уровень')}
-								{@const isSleep = ev.message.includes('спит') || ev.message.includes('проснул') || ev.message.includes('отдых')}
-								{@const isDivine = ev.message.includes('Голос') || ev.message.includes('шёпот') || ev.message.includes('божество')}
-								
-								<div class="event-item" 
-									class:ev-weather={isWeather}
-									class:ev-travel={isTravel}
-									class:ev-level={isLevel}
-									class:ev-divine={isDivine}
-									class:ev-sleep={isSleep}>
-									<span class="ev-time">{new Date(ev.timestamp).toLocaleTimeString('ru', {hour:'2-digit', minute:'2-digit'})}</span>
-									<span class="ev-icon">
-										{#if isWeather}🌤️
-										{:else if isLevel}🏆
-										{:else if isTravel}🧭
-										{:else if isSleep}😴
-										{:else if isDivine}✨
-										{:else}📜{/if}
-									</span>
-									<span class="ev-msg" class:msg-divine={isDivine}>
-										{@html ev.message
-											.replace(/^\[божество\]\s*/u, '')
-											.replace(/(Джон|Солитьюд|Вайтран|Рифтен|Маркарт|Виндхельм|Альтмер|Имперец|Данмер)/g, '<span class="text-highlight">$1</span>')
-										}
-									</span>
-								</div>
-								{#if i < journalEvents.length - 1}<hr class="ev-sep" />{/if}
-							{/each}
-						{/if}
+					{#if journalEvents.length === 0}
+						<div class="empty-feed">
+							<p>🌿 Герой только начинает свой путь...</p>
+							<p class="muted-text">Первые записи скоро появятся здесь.</p>
+						</div>
 					{:else}
-						{@const combatEvents = events.filter(e => e.type === 'combat').slice(0, logLimit)}
-						{#if combatEvents.length === 0}
-							<div class="empty-feed">
-								<p>🕊️ Здесь пока мирно.</p>
-								<p class="muted-text">Боевые действия отсутствуют.</p>
+						{#each journalEvents as ev, i}
+							{@const isWeather = ev.message.includes('Погода') || ev.message.includes('погода')}
+							{@const isTravel = ev.message.includes('прибыл') || ev.message.includes('направил') || ev.message.includes('путь') || ev.message.includes('Солитьюд') || ev.message.includes('Вайтран')}
+							{@const isLevel = ev.message.includes('уровень') || ev.message.includes('Уровень')}
+							{@const isSleep = ev.message.includes('спит') || ev.message.includes('проснул') || ev.message.includes('отдых')}
+							{@const isDivine = ev.message.includes('Голос') || ev.message.includes('шёпот') || ev.message.includes('божество')}
+							
+							<div class="event-item" 
+								class:ev-weather={isWeather}
+								class:ev-travel={isTravel}
+								class:ev-level={isLevel}
+								class:ev-divine={isDivine}
+								class:ev-sleep={isSleep}>
+								<span class="ev-time">{new Date(ev.timestamp).toLocaleTimeString('ru', {hour:'2-digit', minute:'2-digit'})}</span>
+								<span class="ev-icon">
+									{#if isWeather}🌤️
+									{:else if isLevel}🏆
+									{:else if isTravel}🧭
+									{:else if isSleep}😴
+									{:else if isDivine}✨
+									{:else}📜{/if}
+								</span>
+								<span class="ev-msg" class:msg-divine={isDivine}>
+									{@html ev.message
+										.replace(/^\[божество\]\s*/u, '')
+										.replace(/(Джон|Солитьюд|Вайтран|Рифтен|Маркарт|Виндхельм|Альтмер|Имперец|Данмер)/g, '<span class="text-highlight">$1</span>')
+									}
+								</span>
 							</div>
-						{:else}
-							{#each combatEvents as ev, i}
-								<div class="event-item combat-ev-item" class:is-hit={ev.message.includes('урон') || ev.message.includes('бьёт')} class:is-victory={ev.message.includes('повержен') || ev.message.includes('убит')}>
-									<span class="ev-time">{new Date(ev.timestamp).toLocaleTimeString('ru', {hour:'2-digit', minute:'2-digit'})}</span>
-									<span class="ev-icon">{ev.message.includes('повержен') || ev.message.includes('убит') ? '💀' : '⚔️'}</span>
-									<span class="ev-msg combat-msg" class:combat-highlight={ev.message.includes('урон')}>{ev.message}</span>
-								</div>
-								{#if i < combatEvents.length - 1}<hr class="ev-sep" />{/if}
-							{/each}
-						{/if}
+							{#if i < journalEvents.length - 1}<hr class="ev-sep" />{/if}
+						{/each}
 					{/if}
 				</div>
 			</div>
@@ -406,47 +384,6 @@
 				</div>
 			</div>
 
-			<div class="card world-card">
-				<div class="card-header-sm">🌍 Мир</div>
-				<div class="card-content">
-					<div class="world-row">
-						<div class="world-tile">
-							<div class="world-bigicon">
-								{#if character.timeOfDay === 'morning'}🌅
-								{:else if character.timeOfDay === 'day'}☀️
-								{:else if character.timeOfDay === 'evening'}🌇
-								{:else}🌙{/if}
-							</div>
-							<div class="world-info">
-								<div class="world-label">Время</div>
-								<div class="world-val font-cinzel">
-									{#if character.timeOfDay === 'morning'}Утро
-									{:else if character.timeOfDay === 'day'}День
-									{:else if character.timeOfDay === 'evening'}Вечер
-									{:else}Ночь{/if}
-								</div>
-								<div class="world-sub">{character.season}</div>
-							</div>
-						</div>
-						<div class="world-divider"></div>
-						<div class="world-tile">
-							<div class="world-bigicon">
-								{#if character.weather === 'Clear'}☀️
-								{:else if character.weather?.includes('Rain')}🌧️
-								{:else if character.weather?.includes('Snow')}❄️
-								{:else if character.weather?.includes('Storm')}⛈️
-								{:else if character.weather?.includes('Fog')}🌫️
-								{:else}☁️{/if}
-							</div>
-							<div class="world-info">
-								<div class="world-label">Погода</div>
-								<div class="world-val font-cinzel">{character.weather}</div>
-								<div class="world-sub">Влияет на стамину</div>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
 
 			<div class="card divine-card">
 				<div class="card-header">
@@ -570,6 +507,7 @@
 	.dashboard-grid { grid-template-columns: 275px 1fr 275px; align-items: start; }
 }
 .col { display: flex; flex-direction: column; gap: 0.9rem; }
+.top-widgets { display: flex; justify-content: flex-start; margin-bottom: 0.5rem; }
 
 /* CARDS */
 .card {

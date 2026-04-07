@@ -2,14 +2,18 @@
 	import '../app.css';
 	import { page } from '$app/stores';
 	import { gameStore } from '$lib/stores/gameStore.svelte';
-	import { onMount, onDestroy } from 'svelte';
+	import { onMount, onDestroy, untrack } from 'svelte';
 
 	let { data, children } = $props();
 
 	// Initialize store with data from server load (runs during SSR and Hydration)
-	if (data.character) {
-		gameStore.init(data.character, data.offlineEvents || []);
-	}
+	$effect(() => {
+		if (data.character) {
+			untrack(() => {
+				gameStore.init(data.character, data.offlineEvents || []);
+			});
+		}
+	});
 
 	const secondsSinceUpdate = $derived(Math.floor((gameStore.now - gameStore.lastTickAt) / 1000));
 	const currentPath = $derived($page.url.pathname);

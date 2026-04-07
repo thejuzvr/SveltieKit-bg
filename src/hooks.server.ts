@@ -1,7 +1,15 @@
 import { auth } from '$lib/server/auth';
 import { svelteKitHandler } from 'better-auth/svelte-kit';
 import { building } from '$app/environment';
+import { startGameWorker } from '$lib/server/worker';
 import type { Handle } from '@sveltejs/kit';
+
+// Start the game worker on server startup (not during build)
+if (!building) {
+	startGameWorker().catch((err) => {
+		console.error('[Hooks] Failed to start GameWorker:', err);
+	});
+}
 
 export const handle: Handle = async ({ event, resolve }) => {
 	// Let Better-Auth handle auth-specific paths
