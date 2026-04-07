@@ -294,9 +294,9 @@ function priorityToWeight(basePriority: Priority): number {
 export interface Action {
     name: string;
     type: 'combat' | 'quest' | 'explore' | 'travel' | 'rest' | 'learn' | 'social' | 'misc' | 'system';
-    canPerform: (character: Character, worldState: WorldState, gameData: GameData) => boolean;
-    getWeight?: (character: Character, worldState: WorldState, gameData: GameData) => number;
-    perform: (character: Character, gameData: GameData) => Promise<{ character: Character, logMessage: string | string[] }>;
+    canPerform: (character: Character, worldState: WorldState, gameData: GameData & { services?: any }) => boolean;
+    getWeight?: (character: Character, worldState: WorldState, gameData: GameData & { services?: any }) => number;
+    perform: (character: Character, gameData: GameData & { services?: any }) => Promise<{ character: Character, logMessage: string | string[] }>;
 }
 
 const cryptStages = [
@@ -974,8 +974,8 @@ const performCombatRound = async (character: Character, gameData: GameData, logM
         try {
             const questId = updatedChar.combat?.onWinQuestId;
             if (questId) {
-                const svc = await import('@/services/questService');
-                const { getQuest, setTaskStatus, updateQuestProgress, completeQuest, applyRewardsToCharacter } = svc as any;
+
+                const { getQuest, setTaskStatus, updateQuestProgress, completeQuest, applyRewardsToCharacter } = (gameData as any).services as any;
                 const data = await getQuest(questId);
                 if (data && data.tasks && data.tasks.length > 0) {
                     const total = data.tasks.length;
@@ -1021,7 +1021,7 @@ const performCombatRound = async (character: Character, gameData: GameData, logM
                         
                         // Auto-select next quest based on priority
                         try {
-                            const { autoSelectNextQuest } = svc as any;
+                            const { autoSelectNextQuest } = (gameData as any).services as any;
                             const nextResult = await autoSelectNextQuest(updatedChar.id);
                             if (nextResult.ok && nextResult.quest) {
                                 logMessages.push(`[adventure] 📋 Героя уже ждёт новое задание: ${nextResult.quest.title}`);
@@ -1358,8 +1358,8 @@ const takeQuestAction: Action = {
         const { enemies } = gameData;
         // Prefer DB-backed quest instance creation with priority system
         try {
-            const svc = await import('@/services/questService');
-            const { selectQuestTemplatesForCharacter, createQuestFromTemplate, acceptQuest, getActiveQuest, setActiveQuest, listInProgressQuests, autoSelectNextQuest } = svc as any;
+
+            const { selectQuestTemplatesForCharacter, createQuestFromTemplate, acceptQuest, getActiveQuest, setActiveQuest, listInProgressQuests, autoSelectNextQuest, setTaskStatus } = (gameData as any).services as any;
             const { db } = await import('$lib/server/db');
             const schema = await import('$lib/schema/schema');
             const { and, eq, desc } = await import('drizzle-orm');
@@ -1401,7 +1401,7 @@ const takeQuestAction: Action = {
                     if (taskType === 'travel' && currentTask.data?.location === updatedChar.location) {
                         // Auto-complete travel task if already at destination
                         try {
-                            const { setTaskStatus } = svc as any;
+                            const { setTaskStatus } = (gameData as any).services as any;
                             await setTaskStatus(currentTask.id, 'completed', 100);
                             return { 
                                 character: updatedChar, 
@@ -3432,7 +3432,7 @@ export const exploringActions: Action[] = [processCryptStageAction, exploreDunge
  * @param gameData All static game data.
  * @returns The action the character should perform.
  */
-async function determineNextAction(character: Character, gameData: GameData): Promise<Action> {
+async function determineNextAction(character: Character, gameData: GameData & { services?: any }): Promise<Action> {
     
     // 1. Handle actions that are not driven by choice (e.g. current busy action)
     if (character.status !== 'idle' && character.status !== 'in-combat' && character.status !== 'dead' && character.status !== 'exploring') {
@@ -3744,7 +3744,7 @@ async function determineNextAction(character: Character, gameData: GameData): Pr
  */
 export async function processCharacterTurn(
     character: Character, 
-    gameData: GameData
+    gameData: GameData & { services?: any }
 ): Promise<{ character: Character; logMessage: string | string[] } | null> {
     
     const nextAction = await determineNextAction(character, gameData);

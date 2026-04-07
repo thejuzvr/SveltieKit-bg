@@ -32,3 +32,11 @@ export const persistAchievementUnlocks = async (userId: string, char: any, unloc
 // Other stubs for game-engine
 export const getAllThoughts = async () => [];
 export const decreaseLocationDanger = async (locationId: string, amount: number) => 0;
+
+export const getActiveQuest = async (charId: string) => null;
+export const setActiveQuest = async (charId: string, questId: string) => {};
+export const listInProgressQuests = async (charId: string) => [];
+export const selectQuestTemplatesForCharacter = async (char: any) => [];
+export const createQuestFromTemplate = async (char: any, template: any, accept: boolean) => null;
+export const acceptQuest = async (questId: string, setAsActive: boolean) => ({ ok: true });
+export const updateQuestProgress = async (questId: string, progress: number) => {};

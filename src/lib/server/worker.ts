@@ -115,7 +115,19 @@ async function processCharacterTick(character: Character): Promise<void> {
             selectDivineReaction: selectDivineReaction,
             listInteractions: questService.listInteractions,
             evaluateAchievements: questService.evaluateAchievements,
-            persistAchievementUnlocks: questService.persistAchievementUnlocks
+            persistAchievementUnlocks: questService.persistAchievementUnlocks,
+            getQuest: questService.getQuest,
+            setTaskStatus: questService.setTaskStatus,
+            updateQuestProgress: questService.updateQuestProgress,
+            completeQuest: questService.completeQuest,
+            applyRewardsToCharacter: questService.applyRewardsToCharacter,
+            selectQuestTemplatesForCharacter: questService.selectQuestTemplatesForCharacter,
+            createQuestFromTemplate: questService.createQuestFromTemplate,
+            acceptQuest: questService.acceptQuest,
+            getActiveQuest: questService.getActiveQuest,
+            setActiveQuest: questService.setActiveQuest,
+            listInProgressQuests: questService.listInProgressQuests,
+            autoSelectNextQuest: questService.autoSelectNextQuest
         };
 
 		const result = await processGameTick(character, cachedGameData as any, services as any);
@@ -169,6 +181,23 @@ async function processCharacterTick(character: Character): Promise<void> {
 
 	} catch (error: any) {
 		logWorker(`ERROR in processCharacterTick for ${character.id}: ${error.stack}`);
+
+		// Self-healing mechanism: reset stuck states on crash
+		try {
+			character.status = 'idle';
+			character.combat = null;
+			character.currentAction = null;
+			await storage.saveCharacter(character);
+			await storage.addOfflineEvent(character.id, {
+				type: 'system',
+				message: 'Неведомая божественная сила вмешалась, прервав текущее занятие героя и вернув его в чувство.',
+				timestamp: Date.now()
+			});
+			logWorker(`[Self-Healing] Reset state for ${character.name} (${character.id}) after crash.`);
+		} catch (recoveryError) {
+			logWorker(`[Self-Healing] FAILED to recover ${character.id}: ${recoveryError}`);
+		}
+
 		await scheduleCharacterTick(character.id, ONLINE_TICK_MAX);
 	} finally {
         await redis.del(lockKey);
