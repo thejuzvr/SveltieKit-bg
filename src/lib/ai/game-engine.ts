@@ -15,6 +15,18 @@ type OutboxChronicle = OutboxChronicleEntry;
 export { buildWorldState };
 
 export interface EngineServices {
+    getQuest?: any;
+    setTaskStatus?: any;
+    updateQuestProgress?: any;
+    completeQuest?: any;
+    applyRewardsToCharacter?: any;
+    selectQuestTemplatesForCharacter?: any;
+    createQuestFromTemplate?: any;
+    acceptQuest?: any;
+    getActiveQuest?: any;
+    setActiveQuest?: any;
+    listInProgressQuests?: any;
+    autoSelectNextQuest?: any;
     getPendingDivineMessages: (charId: string, limit: number) => Promise<any[]>;
     markDivineMessageProcessed: (id: string) => Promise<void>;
     selectDivineReaction: (ctx: { mood: number; status: string; stats: any }) => { attribution: string; reaction: string };
@@ -1849,7 +1861,7 @@ export async function processGameTick(
     // --- 13. ACTION LOGIC (AI Brain) ---
     if (shouldTakeTurn) {
         try {
-            const result = await processCharacterTurn(updatedChar, gameData);
+            const result = await processCharacterTurn(updatedChar, { ...gameData, services } as any);
             if (result) {
                 updatedChar = result.character;
                 const log = result.logMessage;
