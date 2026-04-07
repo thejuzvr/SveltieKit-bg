@@ -1,6 +1,8 @@
 	<script lang="ts">
 	import { gameStore } from '$lib/stores/gameStore.svelte';
 	import { onMount } from 'svelte';
+	import GameTimeClock from '$lib/components/dashboard/GameTimeClock.svelte';
+	import CombatArena from '$lib/components/dashboard/CombatArena.svelte';
 
 	// ── Derived ────────────────────────────────────────────────────────────
 	const character = $derived(gameStore.character);
@@ -276,7 +278,7 @@
 			{/if}
 
 			{#if isInCombat && character.combat}
-				<div class="card combat-card">
+				<div class="card combat-card" style="display: none;">
 					<div class="card-content">
 						<p class="combat-title blinking">⚔ БОЕВОЕ СТОЛКНОВЕНИЕ ⚔</p>
 						<div class="combat-arena">
