@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "skills": {
+    "sveltekit": {
+      "source": "sickn33/antigravity-awesome-skills",
+      "sourceType": "github",
+      "computedHash": "1a1f2288fb33437355bc3c98a427e780192628b334b43975fb7cae7d59e6dbbc"
+    }
+  }
+}

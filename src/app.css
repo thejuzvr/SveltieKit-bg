@@ -1,0 +1,398 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap');
+
+/* ─── Design Tokens ─────────────────────────────────────────────────────────── */
+:root {
+	/* TES Dark Palette */
+	--bg-void: #05080f;
+	--bg-deep: #0a0e1a;
+	--bg-surface: #0f1525;
+	--bg-elevated: #171e30;
+	--bg-card: #1c243a;
+	--bg-hover: #222d45;
+
+	/* Accent: Elder Scrolls Gold */
+	--gold-bright: #f0c060;
+	--gold-light: #d4a842;
+	--gold-mid: #b8903a;
+	--gold-dark: #8a6a28;
+
+	/* Red / Combat */
+	--red-health: #e05050;
+	--red-dark: #8b2020;
+	--red-glow: rgba(224, 80, 80, 0.3);
+
+	/* Blue / Magicka */
+	--blue-mana: #5080e0;
+	--blue-dark: #2040a0;
+	--blue-glow: rgba(80, 128, 224, 0.3);
+
+	/* Green / Stamina */
+	--green-sta: #40c060;
+	--green-dark: #208040;
+	--green-glow: rgba(64, 192, 96, 0.3);
+
+	/* UI Neutrals */
+	--text-primary: #e8dcc8;
+	--text-secondary: #a09070;
+	--text-muted: #605040;
+	--text-gold: #d4a842;
+	--border-subtle: rgba(200, 160, 80, 0.12);
+	--border-light: rgba(200, 160, 80, 0.25);
+	--border-gold: rgba(200, 160, 80, 0.5);
+
+	/* Glow */
+	--glow-gold: 0 0 20px rgba(200, 160, 50, 0.35), 0 0 60px rgba(200, 160, 50, 0.15);
+	--glow-red: 0 0 15px rgba(224, 80, 80, 0.35);
+	--glow-blue: 0 0 15px rgba(80, 128, 224, 0.35);
+
+	/* Spacing */
+	--radius-sm: 6px;
+	--radius-md: 10px;
+	--radius-lg: 16px;
+	--radius-xl: 24px;
+}
+
+/* ─── Reset ──────────────────────────────────────────────────────────────────── */
+*, *::before, *::after {
+	box-sizing: border-box;
+	margin: 0;
+	padding: 0;
+}
+
+html {
+	scroll-behavior: smooth;
+}
+
+body {
+	background-color: var(--bg-void);
+	color: var(--text-primary);
+	font-family: 'Crimson Text', Georgia, serif;
+	font-size: 16px;
+	line-height: 1.6;
+	min-height: 100vh;
+	overflow-x: hidden;
+
+	/* Subtle starfield texture */
+	background-image:
+		radial-gradient(ellipse at 20% 20%, rgba(200, 160, 50, 0.04) 0%, transparent 50%),
+		radial-gradient(ellipse at 80% 80%, rgba(80, 80, 200, 0.04) 0%, transparent 50%);
+}
+
+/* ─── Typography ─────────────────────────────────────────────────────────────── */
+h1, h2, h3 {
+	font-family: 'Cinzel', 'Times New Roman', serif;
+	letter-spacing: 0.05em;
+	color: var(--gold-bright);
+	font-weight: 600;
+}
+
+h1 { font-size: 2rem; }
+h2 { font-size: 1.5rem; }
+h3 { font-size: 1.1rem; }
+
+p { color: var(--text-primary); }
+
+a {
+	color: var(--gold-light);
+	text-decoration: none;
+	transition: color 0.2s;
+}
+
+a:hover { color: var(--gold-bright); }
+
+/* ─── Scrollbar ─────────────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-deep); }
+::-webkit-scrollbar-thumb {
+	background: var(--gold-dark);
+	border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover { background: var(--gold-mid); }
+
+/* ─── Layout Utilities ───────────────────────────────────────────────────────── */
+.container {
+	max-width: 1200px;
+	margin: 0 auto;
+	padding: 0 1.5rem;
+}
+
+.flex { display: flex; }
+.flex-col { flex-direction: column; }
+.items-center { align-items: center; }
+.justify-between { justify-content: space-between; }
+.gap-2 { gap: 0.5rem; }
+.gap-4 { gap: 1rem; }
+.gap-6 { gap: 1.5rem; }
+
+/* ─── Card Component ─────────────────────────────────────────────────────────── */
+.card {
+	background: var(--bg-card);
+	border: 1px solid var(--border-subtle);
+	border-radius: var(--radius-lg);
+	padding: 1.5rem;
+	position: relative;
+	overflow: hidden;
+	transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.card::before {
+	content: '';
+	position: absolute;
+	inset: 0;
+	border-radius: inherit;
+	background: linear-gradient(135deg, rgba(200,160,50,0.05) 0%, transparent 60%);
+	pointer-events: none;
+}
+
+.card:hover {
+	border-color: var(--border-light);
+}
+
+.card.gold-glow {
+	box-shadow: var(--glow-gold);
+	border-color: var(--border-gold);
+}
+
+/* ─── Stat Bars ──────────────────────────────────────────────────────────────── */
+.stat-bar {
+	width: 100%;
+	height: 10px;
+	border-radius: 99px;
+	background: rgba(255, 255, 255, 0.08);
+	overflow: hidden;
+	position: relative;
+}
+
+.stat-bar-fill {
+	height: 100%;
+	border-radius: 99px;
+	transition: width 0.4s ease;
+	position: relative;
+}
+
+.stat-bar-fill.health {
+	background: linear-gradient(90deg, var(--red-dark), var(--red-health));
+	box-shadow: 0 0 8px rgba(224, 80, 80, 0.5);
+}
+
+.stat-bar-fill.magicka {
+	background: linear-gradient(90deg, var(--blue-dark), var(--blue-mana));
+	box-shadow: 0 0 8px rgba(80, 128, 224, 0.5);
+}
+
+.stat-bar-fill.stamina {
+	background: linear-gradient(90deg, var(--green-dark), var(--green-sta));
+	box-shadow: 0 0 8px rgba(64, 192, 96, 0.5);
+}
+
+.stat-bar-fill.fatigue {
+	background: linear-gradient(90deg, #5a5020, #c0a040);
+}
+
+/* ─── Buttons ────────────────────────────────────────────────────────────────── */
+.btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.5rem;
+	padding: 0.6rem 1.4rem;
+	border-radius: var(--radius-md);
+	border: 1px solid transparent;
+	font-family: 'Cinzel', serif;
+	font-size: 0.85rem;
+	font-weight: 600;
+	letter-spacing: 0.05em;
+	cursor: pointer;
+	transition: all 0.2s;
+	text-transform: uppercase;
+}
+
+.btn-gold {
+	background: linear-gradient(135deg, var(--gold-dark), var(--gold-mid));
+	color: var(--bg-void);
+	border-color: var(--gold-bright);
+}
+
+.btn-gold:hover {
+	background: linear-gradient(135deg, var(--gold-mid), var(--gold-bright));
+	box-shadow: var(--glow-gold);
+	transform: translateY(-1px);
+}
+
+.btn-ghost {
+	background: transparent;
+	color: var(--text-secondary);
+	border-color: var(--border-subtle);
+}
+
+.btn-ghost:hover {
+	color: var(--text-primary);
+	border-color: var(--border-light);
+	background: rgba(255, 255, 255, 0.05);
+}
+
+.btn-danger {
+	background: linear-gradient(135deg, var(--red-dark), var(--red-health));
+	color: white;
+	border-color: var(--red-health);
+}
+
+/* ─── Input ──────────────────────────────────────────────────────────────────── */
+.input {
+	width: 100%;
+	padding: 0.65rem 1rem;
+	background: var(--bg-deep);
+	border: 1px solid var(--border-subtle);
+	border-radius: var(--radius-md);
+	color: var(--text-primary);
+	font-family: 'Crimson Text', serif;
+	font-size: 1rem;
+	transition: border-color 0.2s, box-shadow 0.2s;
+	outline: none;
+}
+
+.input:focus {
+	border-color: var(--border-gold);
+	box-shadow: 0 0 0 3px rgba(200, 160, 50, 0.15);
+}
+
+.input::placeholder { color: var(--text-muted); }
+
+/* ─── Badge ──────────────────────────────────────────────────────────────────── */
+.badge {
+	display: inline-flex;
+	align-items: center;
+	padding: 0.2rem 0.6rem;
+	border-radius: 99px;
+	font-size: 0.75rem;
+	font-weight: 600;
+	letter-spacing: 0.05em;
+}
+
+.badge-gold {
+	background: rgba(200, 160, 50, 0.15);
+	color: var(--gold-bright);
+	border: 1px solid rgba(200, 160, 50, 0.3);
+}
+
+.badge-red {
+	background: rgba(224, 80, 80, 0.15);
+	color: var(--red-health);
+}
+
+.badge-blue {
+	background: rgba(80, 128, 224, 0.15);
+	color: var(--blue-mana);
+}
+
+/* ─── Event Log ──────────────────────────────────────────────────────────────── */
+.event-log {
+	display: flex;
+	flex-direction: column;
+	gap: 0.4rem;
+	overflow-y: auto;
+	scrollbar-width: thin;
+}
+
+.event-item {
+	padding: 0.5rem 0.75rem;
+	border-radius: var(--radius-sm);
+	font-size: 0.9rem;
+	line-height: 1.4;
+	border-left: 2px solid transparent;
+	animation: eventSlideIn 0.3s ease;
+}
+
+@keyframes eventSlideIn {
+	from {
+		opacity: 0;
+		transform: translateX(-8px);
+	}
+	to {
+		opacity: 1;
+		transform: translateX(0);
+	}
+}
+
+.event-item.combat {
+	background: rgba(224, 80, 80, 0.08);
+	border-left-color: var(--red-health);
+	color: #e8b0b0;
+}
+
+.event-item.system {
+	background: rgba(200, 160, 50, 0.06);
+	border-left-color: var(--gold-dark);
+	color: var(--text-primary);
+}
+
+.event-item.quest {
+	background: rgba(80, 128, 224, 0.08);
+	border-left-color: var(--blue-mana);
+	color: #b0c0e8;
+}
+
+.event-item.explore {
+	background: rgba(64, 192, 96, 0.06);
+	border-left-color: var(--green-sta);
+	color: #b0e8c0;
+}
+
+/* ─── Divider ────────────────────────────────────────────────────────────────── */
+.divider {
+	height: 1px;
+	background: var(--border-subtle);
+	margin: 1rem 0;
+}
+
+.divider-gold {
+	height: 1px;
+	background: linear-gradient(90deg, transparent, var(--gold-dark), transparent);
+	margin: 1rem 0;
+}
+
+/* ─── Animations ─────────────────────────────────────────────────────────────── */
+@keyframes pulse-gold {
+	0%, 100% { box-shadow: 0 0 10px rgba(200, 160, 50, 0.2); }
+	50% { box-shadow: 0 0 25px rgba(200, 160, 50, 0.5); }
+}
+
+@keyframes float {
+	0%, 100% { transform: translateY(0); }
+	50% { transform: translateY(-4px); }
+}
+
+@keyframes spin {
+	from { transform: rotate(0deg); }
+	to { transform: rotate(360deg); }
+}
+
+.animate-pulse-gold { animation: pulse-gold 2s infinite; }
+.animate-float { animation: float 3s ease-in-out infinite; }
+.animate-spin { animation: spin 1s linear infinite; }
+
+/* ─── Skeleton Loader ───────────────────────────────────────────────────────── */
+.skeleton {
+	background: linear-gradient(90deg, var(--bg-elevated) 25%, var(--bg-hover) 50%, var(--bg-elevated) 75%);
+	background-size: 200% 100%;
+	animation: shimmer 1.5s infinite;
+	border-radius: var(--radius-sm);
+}
+
+@keyframes shimmer {
+	from { background-position: 200% 0; }
+	to { background-position: -200% 0; }
+}
+
+/* ─── Misc ───────────────────────────────────────────────────────────────────── */
+.text-gold { color: var(--gold-bright); }
+.text-muted { color: var(--text-muted); }
+.text-secondary { color: var(--text-secondary); }
+.text-center { text-align: center; }
+.font-cinzel { font-family: 'Cinzel', serif; }
+.font-crimson { font-family: 'Crimson Text', serif; }
+
+.relative { position: relative; }
+.overflow-hidden { overflow: hidden; }
+.w-full { width: 100%; }
+.h-full { height: 100%; }
