@@ -7,7 +7,23 @@ import { refreshInterventionPower } from '$lib/server/divine.js';
 export const POST: RequestHandler = async ({ locals, request }) => {
 	if (!locals.user) return json({ error: 'Unauthorized' }, { status: 401 });
 
-	const { message } = await request.json();
+	let { message } = await request.json();
+
+	// Validation
+	if (typeof message !== 'string') {
+		return json({ error: 'Message must be a string' }, { status: 400 });
+	}
+
+	message = message.replace(/<[^>]+>/g, '').trim();
+
+	if (!message) {
+		return json({ error: 'Message cannot be empty' }, { status: 400 });
+	}
+
+	if (message.length > 200) {
+		return json({ error: 'Message too long (max 200 chars)' }, { status: 400 });
+	}
+
 	const character = await storage.getCharacterByUserId(locals.user.id);
 
 	if (!character) return json({ error: 'Character not found' }, { status: 404 });
