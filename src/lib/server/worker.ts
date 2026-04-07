@@ -35,9 +35,7 @@ const GLOBAL_WATCHDOG_KEY = Symbol.for('elderscrolls.watchdog.v2');
 function logWorker(msg: string) {
     if (process.env.LOGS !== 'true') return;
     const ts = new Date().toISOString();
-    try {
-        fs.appendFileSync('/tmp/worker.log', `[${ts}] ${msg}\n`);
-    } catch {}
+    fs.appendFile('/tmp/worker.log', `[${ts}] ${msg}\n`, () => {});
     console.log(`[Worker][${ts}] ${msg}`);
 }
 

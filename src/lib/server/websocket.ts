@@ -16,9 +16,7 @@ const GLOBAL_WS_MANAGER_KEY = Symbol.for('elderscrolls.wsmanager.v3');
 function logWS(msg: string) {
     if (process.env.LOGS !== 'true') return;
     const timestamp = new Date().toISOString();
-    try {
-        fs.appendFileSync('/tmp/worker.log', `[WS][${timestamp}] ${msg}\n`);
-    } catch {}
+    fs.appendFile('/tmp/worker.log', `[WS][${timestamp}] ${msg}\n`, () => {});
     console.log(`[WS][${timestamp}] ${msg}`);
 }
 
