@@ -5,7 +5,7 @@ import { PROFILES } from "./config/profiles";
 import { db } from "$lib/server/db";
 import * as schema from "$lib/schema/schema";
 import { eq } from "drizzle-orm";
-import { fatigueDampeningFactor, loadFatigue } from "./fatigue";
+import { fatigueDampeningFactor } from "./fatigue";
 import { composeModifierMultiplier, getActiveModifiers } from "./modifiers";
 import { CATEGORY_BASE_MULTIPLIERS } from "./config/constants";
 
@@ -77,26 +77,23 @@ export async function computeActionScores(params: {
   const baseFromRule = primary ? priorityToBaseWeight(primary.priority) : 10;
   const ruleBoost = primary?.boost ?? 0;
 
-  // Load fatigue and modifiers
-  const [fatigue, modifiers] = await Promise.all([
-    loadFatigue(character.id),
+  // Load AI state (fatigue, learning, profile) and modifiers efficiently
+  const [[aiStateRow], modifiers] = await Promise.all([
+    db.select().from(schema.characterAiState).where(eq(schema.characterAiState.characterId, character.id)).limit(1).catch(() => [null]),
     getActiveModifiers(character.id),
   ]);
-  const modifierMultiplier = composeModifierMultiplier(modifiers);
 
-  // Learning multiplier per actionKey
-  let learning: Record<string, { attempts: number; successes: number; recent: number[] }> = {};
-  try {
-    const [row] = await db.select().from(schema.characterAiState).where(eq(schema.characterAiState.characterId, character.id)).limit(1);
-    learning = ((row as any)?.learning || {}) as any;
-  } catch {}
+  const aiState = aiStateRow as any || {};
+  const fatigue = aiState.fatigue || {};
+  const learning = aiState.learning || {};
+
+  const modifierMultiplier = composeModifierMultiplier(modifiers);
 
   // Select profile: try DB state, fallback to param, then 'warrior'
   let profileKey: keyof typeof PROFILES | undefined = params.profileCode;
   try {
-    const [row] = await db.select().from(schema.characterAiState).where(eq(schema.characterAiState.characterId, character.id)).limit(1);
-    if (row && (row as any).profileId) {
-      const [prof] = await db.select().from(schema.aiProfiles).where(eq(schema.aiProfiles.id, (row as any).profileId)).limit(1);
+    if (aiState.profileId) {
+      const [prof] = await db.select().from(schema.aiProfiles).where(eq(schema.aiProfiles.id, aiState.profileId)).limit(1);
       const code = (prof as any)?.code as keyof typeof PROFILES | undefined;
       if (code && PROFILES[code]) profileKey = code;
     }
